@@ -8,6 +8,14 @@ Write-Host ""
 
 # Create output directory
 $outputDir = "$PSScriptRoot\CadenceTool"
+
+# Backup existing README if it exists
+$readmeBackup = $null
+if (Test-Path "$outputDir\README.txt") {
+    $readmeBackup = "$PSScriptRoot\README_backup.txt"
+    Copy-Item "$outputDir\README.txt" $readmeBackup -Force
+}
+
 if (Test-Path $outputDir) {
     Remove-Item -Recurse -Force $outputDir
 }
@@ -117,46 +125,33 @@ if (Test-Path $cscPath) {
 Write-Host ""
 Write-Host "[3/3] Creating README..." -ForegroundColor Yellow
 
-$readmeContent = @"
-Cadence Tool - SVN Plugin Installer
+# Restore backed up README if it exists
+if ($readmeBackup -and (Test-Path $readmeBackup)) {
+    Copy-Item $readmeBackup "$outputDir\README.txt" -Force
+    Remove-Item $readmeBackup -Force
+    Write-Host "      > Restored existing README.txt" -ForegroundColor Green
+} else {
+    # Create default README
+    $readmeContent = @"
+Cadence Tool - SVN 插件安装程序
 ====================================
 
-Version: 1.0
-Date: $(Get-Date -Format "yyyy-MM-dd")
+版本: 1.0
+日期: 2025-12-04
+作者: Sloan Chi
 
-Description:
-------------
-This tool installs the SVN Plugin for Cadence Capture CIS 17.2.
+请查看项目文档获取详细使用说明。
+项目地址: https://github.com/chisl9403/cadence-Plug
 
-Features:
----------
-- Install SVN Plugin
-- Uninstall SVN Plugin
-- Auto-detect Cadence installation path
-- Floating toolbar with SVN commands (Update, Commit, Cleanup, Settings)
-
-Usage:
-------
-1. Double-click "Cadence Tool.exe"
-2. Select installation option:
-   [1] Install Plugin
-   [2] Uninstall Plugin
-   [3] Exit
-3. Follow on-screen instructions
-
-Requirements:
--------------
-- Cadence Capture CIS 17.2 (SPB 17.2-2016)
-- TortoiseSVN installed
-- Windows 7 or later
-
-Support:
+简要说明:
 --------
-For issues or questions, please contact your administrator.
-"@
+双击运行 Cadence Tool.exe 即可安装插件。
+安装后重启 Cadence Capture，工具栏将自动出现在屏幕右下角。
 
-[System.IO.File]::WriteAllText("$outputDir\README.txt", $readmeContent, [System.Text.Encoding]::UTF8)
-Write-Host "      > README.txt created" -ForegroundColor Green
+"@
+    [System.IO.File]::WriteAllText("$outputDir\README.txt", $readmeContent, [System.Text.Encoding]::UTF8)
+    Write-Host "      > README.txt created" -ForegroundColor Green
+}
 
 Write-Host ""
 Write-Host "Build Complete!" -ForegroundColor Green

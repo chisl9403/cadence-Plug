@@ -17,6 +17,7 @@ BEGIN
         MENUITEM "-", 0, ""
         MENUITEM "SVN Update\tCtrl+U", "_cdnMenuPluginSvnUpdate", ""
         MENUITEM "SVN Commit\tCtrl+M", "_cdnMenuPluginSvnCommit", ""
+        MENUITEM "SVN Show Log\tCtrl+H", "_cdnMenuPluginSvnLog", ""
         MENUITEM "-", 0, ""
         MENUITEM "Settings...", "_cdnMenuPluginSettings", ""
         MENUITEM "About", "_cdnMenuPluginAbout", ""
@@ -29,6 +30,7 @@ END
 
 ACCEL "Ctrl+U", "_cdnMenuPluginSvnUpdate"
 ACCEL "Ctrl+M", "_cdnMenuPluginSvnCommit"
+ACCEL "Ctrl+H", "_cdnMenuPluginSvnLog"
 
 ;;=============================================================================
 ;; Note:

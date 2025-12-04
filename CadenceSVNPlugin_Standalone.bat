@@ -451,6 +451,7 @@ exit /b 0
 ::MEN::        MENUITEM "-", 0, ""
 ::MEN::        MENUITEM "SVN Update\tCtrl+U", "_cdnMenuPluginSvnUpdate", ""
 ::MEN::        MENUITEM "SVN Commit\tCtrl+M", "_cdnMenuPluginSvnCommit", ""
+::MEN::        MENUITEM "SVN Show Log\tCtrl+H", "_cdnMenuPluginSvnLog", ""
 ::MEN::        MENUITEM "-", 0, ""
 ::MEN::        MENUITEM "Settings...", "_cdnMenuPluginSettings", ""
 ::MEN::        MENUITEM "About", "_cdnMenuPluginAbout", ""
@@ -458,12 +459,15 @@ exit /b 0
 ::MEN::END
 ::MEN::ACCEL "Ctrl+U", "_cdnMenuPluginSvnUpdate"
 ::MEN::ACCEL "Ctrl+M", "_cdnMenuPluginSvnCommit"
+::MEN::ACCEL "Ctrl+H", "_cdnMenuPluginSvnLog"
 ::MEN_END::
 
 ::TCL_START::
 ::TCL::#
-::TCL::# Cadence Capture SVN Plugin (Simplified)
+::TCL::# Cadence Capture SVN Plugin
+::TCL::# Version: 1.1
 ::TCL::# Date: 2025-12-04
+::TCL::# Author: Sloan Chi
 ::TCL::#
 ::TCL::package require Tcl 8.4
 ::TCL::# Create namespace
@@ -732,6 +736,56 @@ exit /b 0
 ::TCL::        ShowMessage "Commit failed:\n$err" "Error" 0
 ::TCL::    }
 ::TCL::}
+::TCL::# SVN Show Log Command
+::TCL::proc ::CaptureMenuPlugin::SvnLog {} {
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: Starting..."
+::TCL::    set designPath [::CaptureMenuPlugin::GetDesignPath]
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: Design path = $designPath"
+::TCL::    
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: Checking if SVN working copy..."
+::TCL::    set isSvn 0
+::TCL::    if {[catch {set isSvn [::CaptureMenuPlugin::IsSvnWorkingCopy $designPath]} err]} {
+::TCL::        ::CaptureMenuPlugin::Log "SvnLog: IsSvnWorkingCopy failed: $err"
+::TCL::        ShowMessage "Error checking SVN status:\n$err" "Error" 0
+::TCL::        return
+::TCL::    }
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: IsSvnWorkingCopy returned: $isSvn"
+::TCL::    
+::TCL::    if {!$isSvn} {
+::TCL::        ShowMessage "Not an SVN working copy:\n$designPath" "Error" 0
+::TCL::        return
+::TCL::    }
+::TCL::    
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: Getting SVN path..."
+::TCL::    set svnExe [::CaptureMenuPlugin::GetSvnPath]
+::TCL::    ::CaptureMenuPlugin::Log "SvnLog: SVN path = $svnExe"
+::TCL::    
+::TCL::    if {$svnExe == ""} {
+::TCL::        ::CaptureMenuPlugin::Log "SvnLog: SVN not found!"
+::TCL::        ShowMessage "SVN not found!" "Error" 0
+::TCL::        return
+::TCL::    }
+::TCL::    
+::TCL::    if {$svnExe == "TORTOISE"} {
+::TCL::        ::CaptureMenuPlugin::Log "SvnLog: Using TortoiseSVN..."
+::TCL::        set tortoisePath "C:/Program Files/TortoiseSVN/bin/TortoiseProc.exe"
+::TCL::        set cmdLine [list $tortoisePath /command:log /path:$designPath /closeonend:0]
+::TCL::        ::CaptureMenuPlugin::Log "SvnLog: Executing: $cmdLine"
+::TCL::        if {[catch { eval exec $cmdLine & } err]} {
+::TCL::            ::CaptureMenuPlugin::Log "SvnLog: Execution failed: $err"
+::TCL::        } else {
+::TCL::            ::CaptureMenuPlugin::Log "SvnLog: TortoiseSVN launched successfully"
+::TCL::        }
+::TCL::        return
+::TCL::    }
+::TCL::    
+::TCL::    if {[catch {
+::TCL::        set output [exec $svnExe log --limit 20 "$designPath" 2>@1]
+::TCL::        ShowMessage "SVN Log:\n\n$output" "Log" 0
+::TCL::    } err]} {
+::TCL::        ShowMessage "Log failed:\n$err" "Error" 0
+::TCL::    }
+::TCL::}
 ::TCL::# SVN Cleanup Command
 ::TCL::proc ::CaptureMenuPlugin::SvnCleanup {} {
 ::TCL::    ::CaptureMenuPlugin::Log "SvnCleanup: Starting..."
@@ -784,23 +838,36 @@ exit /b 0
 ::TCL::}
 ::TCL::# Settings
 ::TCL::proc ::CaptureMenuPlugin::Settings {} {
-::TCL::    set svnExe [::CaptureMenuPlugin::GetSvnPath]
-::TCL::    
-::TCL::    set msg "Cadence Capture SVN Plugin\nVersion: 1.0.1\nDate: 2025-12-04\n\n"
-::TCL::    
-::TCL::    if {$svnExe == "TORTOISE"} {
-::TCL::        append msg "Mode: TortoiseSVN GUI\nPath: C:/Program Files/TortoiseSVN/bin/TortoiseProc.exe"
-::TCL::    } elseif {$svnExe == ""} {
-::TCL::        append msg "SVN Status: NOT FOUND"
-::TCL::    } else {
-::TCL::        append msg "Mode: Command Line\nPath: $svnExe"
-::TCL::    }
-::TCL::    
-::TCL::    ShowMessage $msg "Settings" 0
+::TCL::    ::CaptureMenuPlugin::About
 ::TCL::}
 ::TCL::# About
 ::TCL::proc ::CaptureMenuPlugin::About {} {
-::TCL::    ShowMessage "Cadence Capture SVN Plugin\n\nVersion: 1.0.1\nDate: 2025-12-04\n\nSimple SVN integration" "About" 0
+::TCL::    set svnExe [::CaptureMenuPlugin::GetSvnPath]
+::TCL::    
+::TCL::    set msg "Cadence Capture SVN Plugin\n\n"
+::TCL::    append msg "Version: 1.1\n"
+::TCL::    append msg "Date: 2025-12-04\n"
+::TCL::    append msg "Author: Sloan Chi\n\n"
+::TCL::    
+::TCL::    append msg "--- Toolbar Buttons ---\n"
+::TCL::    append msg "U - SVN Update (Ctrl+U)\n"
+::TCL::    append msg "C - SVN Commit (Ctrl+M)\n"
+::TCL::    append msg "L - SVN Cleanup\n"
+::TCL::    append msg "S - SVN Show Log (Ctrl+H)\n"
+::TCL::    append msg "A - About Plugin\n\n"
+::TCL::    
+::TCL::    append msg "--- SVN Configuration ---\n"
+::TCL::    if {$svnExe == "TORTOISE"} {
+::TCL::        append msg "Mode: TortoiseSVN GUI\n"
+::TCL::        append msg "Path: C:/Program Files/TortoiseSVN/bin/TortoiseProc.exe"
+::TCL::    } elseif {$svnExe == ""} {
+::TCL::        append msg "Status: SVN NOT FOUND"
+::TCL::    } else {
+::TCL::        append msg "Mode: Command Line\n"
+::TCL::        append msg "Path: $svnExe"
+::TCL::    }
+::TCL::    
+::TCL::    ShowMessage $msg "About" 0
 ::TCL::}
 ::TCL::# Create floating menu window
 ::TCL::proc ::CaptureMenuPlugin::CreateMenuWindow {} {
@@ -851,7 +918,7 @@ exit /b 0
 ::TCL::        ::CaptureMenuPlugin::Log "CreateMenuWindow: Using default taskbar height = $taskbarHeight"
 ::TCL::    }
 ::TCL::    
-::TCL::    set winWidth 200
+::TCL::    set winWidth 130
 ::TCL::    set winHeight 25
 ::TCL::    set xPos [expr {$screenWidth - $winWidth - 5}]
 ::TCL::    set yPos [expr {$screenHeight - $winHeight - $taskbarHeight - 21}]
@@ -891,6 +958,8 @@ exit /b 0
 ::TCL::        -activebackground "#45a049" \
 ::TCL::        -relief raised -borderwidth 1
 ::TCL::    pack .svnMenu.f.update -side left -padx 1 -pady 1
+::TCL::    bind .svnMenu.f.update <Enter> {+wm title .svnMenu "SVN Update (Ctrl+U)"}
+::TCL::    bind .svnMenu.f.update <Leave> {+wm title .svnMenu "SVN"}
 ::TCL::    
 ::TCL::    # SVN Commit button (icon style)
 ::TCL::    button .svnMenu.f.commit -text "C" \
@@ -903,6 +972,8 @@ exit /b 0
 ::TCL::        -activebackground "#0b7dda" \
 ::TCL::        -relief raised -borderwidth 1
 ::TCL::    pack .svnMenu.f.commit -side left -padx 1 -pady 1
+::TCL::    bind .svnMenu.f.commit <Enter> {+wm title .svnMenu "SVN Commit (Ctrl+M)"}
+::TCL::    bind .svnMenu.f.commit <Leave> {+wm title .svnMenu "SVN"}
 ::TCL::    
 ::TCL::    # SVN Cleanup button (icon style)
 ::TCL::    button .svnMenu.f.cleanup -text "L" \
@@ -915,18 +986,35 @@ exit /b 0
 ::TCL::        -activebackground "#e68900" \
 ::TCL::        -relief raised -borderwidth 1
 ::TCL::    pack .svnMenu.f.cleanup -side left -padx 1 -pady 1
+::TCL::    bind .svnMenu.f.cleanup <Enter> {+wm title .svnMenu "SVN Cleanup"}
+::TCL::    bind .svnMenu.f.cleanup <Leave> {+wm title .svnMenu "SVN"}
 ::TCL::    
-::TCL::    # Settings button (icon style)
-::TCL::    button .svnMenu.f.settings -text "S" \
+::TCL::    # SVN Log button (icon style)
+::TCL::    button .svnMenu.f.log -text "S" \
 ::TCL::        -command {
-::TCL::            ::CaptureMenuPlugin::Log "Button: Settings clicked"
-::TCL::            ::CaptureMenuPlugin::ToggleAutoShow
+::TCL::            ::CaptureMenuPlugin::Log "Button: Log clicked"
+::TCL::            ::CaptureMenuPlugin::SvnLog
+::TCL::        } \
+::TCL::        -width 2 \
+::TCL::        -bg "#9C27B0" -fg white -font {Arial 8 bold} \
+::TCL::        -activebackground "#7B1FA2" \
+::TCL::        -relief raised -borderwidth 1
+::TCL::    pack .svnMenu.f.log -side left -padx 1 -pady 1
+::TCL::    bind .svnMenu.f.log <Enter> {+wm title .svnMenu "SVN Show Log (Ctrl+H)"}
+::TCL::    bind .svnMenu.f.log <Leave> {+wm title .svnMenu "SVN"}
+::TCL::    
+::TCL::    # About button (icon style)
+::TCL::    button .svnMenu.f.settings -text "A" \
+::TCL::        -command {
+::TCL::            ::CaptureMenuPlugin::About
 ::TCL::        } \
 ::TCL::        -width 2 \
 ::TCL::        -bg "#9E9E9E" -fg white -font {Arial 8 bold} \
 ::TCL::        -activebackground "#757575" \
 ::TCL::        -relief raised -borderwidth 1
 ::TCL::    pack .svnMenu.f.settings -side left -padx 1 -pady 1
+::TCL::    bind .svnMenu.f.settings <Enter> {+wm title .svnMenu "About Plugin"}
+::TCL::    bind .svnMenu.f.settings <Leave> {+wm title .svnMenu "SVN"}
 ::TCL::    
 ::TCL::    # ALL content created - now set window attributes
 ::TCL::    ::CaptureMenuPlugin::Log "CreateMenuWindow: All content created, now setting window attributes"
@@ -1047,6 +1135,13 @@ exit /b 0
 ::TCL::        ::CaptureMenuPlugin::Log "Failed to register SvnCommit: $err"
 ::TCL::    } else {
 ::TCL::        ::CaptureMenuPlugin::Log "Successfully registered SvnCommit"
+::TCL::    }
+::TCL::    
+::TCL::    ::CaptureMenuPlugin::Log "Attempting to register: _cdnMenuPluginSvnLog"
+::TCL::    if {[catch {RegisterAction "_cdnMenuPluginSvnLog" "::CaptureMenuPlugin::SvnLog" "" "" ""} err]} {
+::TCL::        ::CaptureMenuPlugin::Log "Failed to register SvnLog: $err"
+::TCL::    } else {
+::TCL::        ::CaptureMenuPlugin::Log "Successfully registered SvnLog"
 ::TCL::    }
 ::TCL::    
 ::TCL::    ::CaptureMenuPlugin::Log "Attempting to register: _cdnMenuPluginShowMenu"
