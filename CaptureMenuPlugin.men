@@ -1,0 +1,38 @@
+;;=============================================================================
+;; Cadence Capture Custom Menu Plugin
+;; File: CaptureMenuPlugin.men
+;; Date: 2025-12-04
+;; Description: Add SVN tools to Capture menu bar
+;;=============================================================================
+
+;;-----------------------------------------------------------------------------
+;; Extend Tools menu, add SVN submenu
+;;-----------------------------------------------------------------------------
+
+MENU "&Tools"
+BEGIN
+    POPUP "&SVN Tools"
+    BEGIN
+        MENUITEM "Show Toolbar", "_cdnMenuPluginShowMenu", ""
+        MENUITEM "-", 0, ""
+        MENUITEM "SVN Update\tCtrl+U", "_cdnMenuPluginSvnUpdate", ""
+        MENUITEM "SVN Commit\tCtrl+M", "_cdnMenuPluginSvnCommit", ""
+        MENUITEM "-", 0, ""
+        MENUITEM "Settings...", "_cdnMenuPluginSettings", ""
+        MENUITEM "About", "_cdnMenuPluginAbout", ""
+    END
+END
+
+;;-----------------------------------------------------------------------------
+;; Keyboard shortcuts
+;;-----------------------------------------------------------------------------
+
+ACCEL "Ctrl+U", "_cdnMenuPluginSvnUpdate"
+ACCEL "Ctrl+M", "_cdnMenuPluginSvnCommit"
+
+;;=============================================================================
+;; Note:
+;; Commands 9001-9004 are handled by TCL procedures in CaptureMenuPlugin.tcl
+;; The TCL file must register these command IDs properly
+;;=============================================================================
+
