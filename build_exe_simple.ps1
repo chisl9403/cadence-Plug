@@ -136,8 +136,8 @@ if ($readmeBackup -and (Test-Path $readmeBackup)) {
 Cadence Tool - SVN 插件安装程序
 ====================================
 
-版本: 1.0
-日期: 2025-12-04
+版本: 1.2
+日期: 2025-12-09
 作者: Sloan Chi
 
 请查看项目文档获取详细使用说明。

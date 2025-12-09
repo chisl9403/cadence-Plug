@@ -1,6 +1,6 @@
 #
 # Cadence Capture SVN Plugin
-# Version: 1.1
+# Version: 1.2
 # Date: 2025-12-04
 # Author: Sloan Chi
 #
@@ -47,7 +47,6 @@ proc ::CaptureMenuPlugin::GetConfigFile {} {
 # Load configuration
 proc ::CaptureMenuPlugin::LoadConfig {} {
     variable autoShow
-    set autoShow 1
     set cfgFile [::CaptureMenuPlugin::GetConfigFile]
     if {[file exists $cfgFile]} {
         if {[catch {
@@ -398,7 +397,7 @@ proc ::CaptureMenuPlugin::About {} {
     set svnExe [::CaptureMenuPlugin::GetSvnPath]
     
     set msg "Cadence Capture SVN Plugin\n\n"
-    append msg "Version: 1.1\n"
+    append msg "Version: 1.2\n"
     append msg "Date: 2025-12-04\n"
     append msg "Author: Sloan Chi\n\n"
     
@@ -512,8 +511,8 @@ proc ::CaptureMenuPlugin::CreateMenuWindow {} {
         -activebackground "#45a049" \
         -relief raised -borderwidth 1
     pack .svnMenu.f.update -side left -padx 1 -pady 1
-    bind .svnMenu.f.update <Enter> {+wm title .svnMenu "SVN Update (Ctrl+U)"}
-    bind .svnMenu.f.update <Leave> {+wm title .svnMenu "SVN"}
+    bind .svnMenu.f.update <Enter> {wm title .svnMenu "SVN Update (Ctrl+U)"}
+    bind .svnMenu.f.update <Leave> {wm title .svnMenu "SVN"}
     
     # SVN Commit button (icon style)
     button .svnMenu.f.commit -text "C" \
@@ -526,8 +525,8 @@ proc ::CaptureMenuPlugin::CreateMenuWindow {} {
         -activebackground "#0b7dda" \
         -relief raised -borderwidth 1
     pack .svnMenu.f.commit -side left -padx 1 -pady 1
-    bind .svnMenu.f.commit <Enter> {+wm title .svnMenu "SVN Commit (Ctrl+M)"}
-    bind .svnMenu.f.commit <Leave> {+wm title .svnMenu "SVN"}
+    bind .svnMenu.f.commit <Enter> {wm title .svnMenu "SVN Commit (Ctrl+M)"}
+    bind .svnMenu.f.commit <Leave> {wm title .svnMenu "SVN"}
     
     # SVN Cleanup button (icon style)
     button .svnMenu.f.cleanup -text "L" \
@@ -540,8 +539,8 @@ proc ::CaptureMenuPlugin::CreateMenuWindow {} {
         -activebackground "#e68900" \
         -relief raised -borderwidth 1
     pack .svnMenu.f.cleanup -side left -padx 1 -pady 1
-    bind .svnMenu.f.cleanup <Enter> {+wm title .svnMenu "SVN Cleanup"}
-    bind .svnMenu.f.cleanup <Leave> {+wm title .svnMenu "SVN"}
+    bind .svnMenu.f.cleanup <Enter> {wm title .svnMenu "SVN Cleanup"}
+    bind .svnMenu.f.cleanup <Leave> {wm title .svnMenu "SVN"}
     
     # SVN Log button (icon style)
     button .svnMenu.f.log -text "S" \
@@ -554,8 +553,8 @@ proc ::CaptureMenuPlugin::CreateMenuWindow {} {
         -activebackground "#7B1FA2" \
         -relief raised -borderwidth 1
     pack .svnMenu.f.log -side left -padx 1 -pady 1
-    bind .svnMenu.f.log <Enter> {+wm title .svnMenu "SVN Show Log (Ctrl+H)"}
-    bind .svnMenu.f.log <Leave> {+wm title .svnMenu "SVN"}
+    bind .svnMenu.f.log <Enter> {wm title .svnMenu "SVN Show Log (Ctrl+H)"}
+    bind .svnMenu.f.log <Leave> {wm title .svnMenu "SVN"}
     
     # About button (icon style)
     button .svnMenu.f.settings -text "A" \
@@ -567,8 +566,8 @@ proc ::CaptureMenuPlugin::CreateMenuWindow {} {
         -activebackground "#757575" \
         -relief raised -borderwidth 1
     pack .svnMenu.f.settings -side left -padx 1 -pady 1
-    bind .svnMenu.f.settings <Enter> {+wm title .svnMenu "About Plugin"}
-    bind .svnMenu.f.settings <Leave> {+wm title .svnMenu "SVN"}
+    bind .svnMenu.f.settings <Enter> {wm title .svnMenu "About Plugin"}
+    bind .svnMenu.f.settings <Leave> {wm title .svnMenu "SVN"}
     
     # ALL content created - now set window attributes
     ::CaptureMenuPlugin::Log "CreateMenuWindow: All content created, now setting window attributes"
@@ -637,10 +636,9 @@ proc ::CaptureMenuPlugin::HideMenu {} {
 # Load config and auto-show on startup
 ::CaptureMenuPlugin::Log "=== Plugin Loading ==="
 
-# Force autoShow to enabled
+# Respect existing autoShow (do not force enable)
 namespace eval ::CaptureMenuPlugin {
     variable autoShow
-    set autoShow 1
 }
 
 # Always show menu on startup
